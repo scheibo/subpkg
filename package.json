@@ -1,6 +1,6 @@
 {
   "name": "subpkg",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Minimal utility for managing projects with sub-packages",
   "bin": {
     "subpkg": "subpkg.js"

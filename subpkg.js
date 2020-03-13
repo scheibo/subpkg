@@ -15,7 +15,12 @@ for (const subPackage of subPackages) {
   const subPkgPath = path.join(process.cwd(), subPackage)
   const subPkgJson = require(path.join(subPkgPath, 'package.json'));
 
-  console.log('Package \x1b[34m' + subPkgJson.name + '\x1b[0m ...');
+  if (args[0] === 'run' && (args.length === 1 || !subPkgJson.scripts || !subPkgJson.scripts[args[1]])) {
+    console.log('\x1b[90mSkipping package' + subPkgJson.name + '...\x1b[0m');
+    continue;
+  }
+
+  console.log('Package \x1b[34m' + subPkgJson.name + '\x1b[0m...');
   const result = child_process.spawnSync('npm', args, {
     stdio: 'inherit',
     cwd: path.resolve(subPkgPath),
