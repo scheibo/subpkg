@@ -1,22 +1,16 @@
 {
   "name": "subpkg",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Minimal utility for managing projects with sub-packages",
+  "author": "Kirk Scheibelhut",
+  "license": "MIT",
   "bin": {
     "subpkg": "subpkg.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/scheibo/subpkg.git"
-  },
+  "repository": "github:scheibo/subpkg",
   "keywords": [
     "minimal",
     "package",
     "sub-package"
-  ],
-  "author": "Kirk Scheibelhut",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/scheibo/subpkg/issues"
-  }
+  ]
 }
