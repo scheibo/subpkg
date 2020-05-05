@@ -4,9 +4,7 @@
   "description": "Minimal utility for managing projects with sub-packages",
   "author": "Kirk Scheibelhut",
   "license": "MIT",
-  "bin": {
-    "subpkg": "subpkg.js"
-  },
+  "bin": "index.js",
   "repository": "github:scheibo/subpkg",
   "keywords": [
     "minimal",
