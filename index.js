@@ -38,7 +38,6 @@ const env = {
 };
 
 if (!subPackages.length) subPackages.push(...packageJson.subPackages);
-if (!(packageJson.scripts && packageJson.scripts[cmd])) error(`Unknown script: '${cmd}'`);
 if (subPackage && !subPackages.includes(subPackage)) subPackages.unshift(subPackage);
 
 if (subPackages.length === 1) {
