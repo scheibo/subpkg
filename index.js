@@ -37,6 +37,7 @@ const env = {
   PATH: process.env.PATH ? `${process.env.PATH}:${dir}/node_modules/.bin` : `${dir}/node_modules/.bin`,
 };
 
+if (!subPackages.length) subPackages.push(...packageJson.subPackages);
 if (!(packageJson.scripts && packageJson.scripts[cmd])) error(`Unknown script: '${cmd}'`);
 if (subPackage && !subPackages.includes(subPackage)) subPackages.unshift(subPackage);
 
