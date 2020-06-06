@@ -37,8 +37,7 @@ const env = {
   PATH: process.env.PATH ? `${process.env.PATH}:${dir}/node_modules/.bin` : `${dir}/node_modules/.bin`,
 };
 
-if (!subPackages.length) subPackages.push(...packageJson.subPackages);
-if (subPackage && !subPackages.includes(subPackage)) subPackages.unshift(subPackage);
+if (!subPackages.length) subPackages.push(...(subPackage ? [subPackage] : packageJson.subPackages));
 
 if (subPackages.length === 1) {
   const subPackage = subPackages[0];
