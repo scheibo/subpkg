@@ -1,69 +1,146 @@
 #!/usr/bin/env node
 'use strict'
 
+const fs = require('fs');
 const path = require('path');
 const child_process = require('child_process');
 
-const spawn = (cmd, args, cwd, env) => child_process.spawnSync(cmd, args, {stdio: 'inherit', cwd, env});
-const error = (msg) => { console.error(msg); process.exit(1); };
-
-const find = (dir = process.cwd(), subPackage = '') => {
-  try {
-    const packageJson = require(path.join(dir, 'package.json'));
-    const subPackages = packageJson.subPackages;
-    if (!subPackages) return find(path.dirname(dir), path.join(path.basename(dir), subPackage));
-    if (subPackage && subPackages.includes(subPackage)) return {dir, packageJson, subPackage};
-    return {dir, packageJson, subPackage: '', subPackageJson: ''}
-  } catch (err) {
-    if (err.code !== 'MODULE_NOT_FOUND') throw err;
-    if (dir === '/') throw new Error('No "subPackages" entry found in any package.json.');
-    return find(path.dirname(dir), path.join(path.basename(dir), subPackage));
-  }
-};
+const DEPENDENCIES = ['dependencies', 'devDependencies', 'optionalDependencies'];
 
 const args = process.argv.slice(2);
 if (!args.length) return;
 
-const {dir, packageJson, subPackage} = find();
+const root = find(process.cwd());
 
 const run = args[0] === 'run';
-const cmd = args[+run];
-const cmdargs = args.slice(0, 1 + run);
-if (!run && packageJson.scripts && packageJson.scripts[cmd]) cmdargs.unshift('run');
-const subPackages = args.slice(1 + run);
+let targets = args.slice(1 + run);
+if (!targets.length) targets = root.json.subPackages;
 
-const env = {
-  ...process.env,
-  PATH: process.env.PATH ? `${process.env.PATH}:${dir}/node_modules/.bin` : `${dir}/node_modules/.bin`,
-};
+const bin = `${root.path}/node_modules/.bin`;
+const env = {...process.env, PATH: process.env.PATH ? `${process.env.PATH}:${bin}` : bin};
 
-if (!subPackages.length) subPackages.push(...(subPackage ? [subPackage] : packageJson.subPackages));
+if (args[0] === 'link') {
+  const {subPackages, lookup} = fill(root);
+  for (let target of targets) {
+    const pkg = subPackages[lookup[target]];
+    let nl = false;
+    for (const dep of DEPENDENCIES) {
+      if (pkg.json[dep]) {
+        for (const name in pkg.json[dep]) {
+          const internal = subPackages[name];
+          if (internal) {
+            if (!nl) console.log(`\x1b[96m${pkg.json.name}\x1b[0m`);
+            nl = true;
 
-if (subPackages.length === 1) {
-  const subPackage = subPackages[0];
-  if (!packageJson.subPackages.includes(subPackage)) error(`Unknown subPackage '${subPackage}'`);
-  const subPackageJson = require(path.resolve(dir, subPackage, 'package.json'));
+            const from = `${root.path}/${pkg.path}/node_modules/${name}`;
+            const to = `${root.path}/${internal.path}`;
+            console.log(`\x1b[90m${name}\x1b[0m ${path.relative(process.cwd(), from)} -> ${path.relative(process.cwd(), to)}`);
 
-  if (run && !(subPackageJson.scripts && subPackageJson.scripts[cmd])) {
-    error(`'${subPackageJson.name}' does not have script '${cmd}'`);
+            try {
+              fs.unlinkSync(from);
+            } catch (err) {
+              if (err.code !== 'ENOENT') throw err;
+            }
+            fs.symlinkSync(to, from);
+          }
+        }
+      }
+    }
+    if (nl) console.log();
   }
+} else if (args[0] === 'bump') {
+  let version = /^\d+\.\d+\.\d+$/.test(targets[targets.length - 1]) && targets.pop();
 
-  console.log('Running\x1b[36m npm', cmdargs.join(' '), '\x1b[0mfor package \x1b[34m' + subPackageJson.name + '\x1b[0m...');
-  const result = spawn('npm', cmdargs, path.resolve(dir, subPackage), env);
-  process.exit(result.status);
-} else {
-  console.log('Running\x1b[36m npm', cmdargs.join(' '), '\x1b[0mfor', subPackages.length, 'packages...');
-  for (const subPackage of subPackages) {
-    if (!packageJson.subPackages.includes(subPackage)) error(`Unknown subPackage '${subPackage}'D`);
-    const subPackageJson = require(path.resolve(dir, subPackage, 'package.json'));
+  const {subPackages, lookup} = fill(root);
+  for (const target of targets) {
+    const name = lookup[target];
 
-    if (run && !(subPackageJson.scripts && subPackageJson.scripts[cmd])) {
-      console.log('\x1b[90mSkipping package' + subPackageJson.name + '...\x1b[0m');
-      continue;
+    const bumpPkg = subPackages[name];
+    if (!bumpPkg) throw new Error(`Unknown package ${name}`);
+
+    if (!version) {
+      const [major, minor, patch] = bumpPkg.json.version.split('.');
+      version = `${major}.${minor}.${Number(patch) + 1}`;
     }
 
-    console.log('Package \x1b[34m' + subPackageJson.name + '\x1b[0m...');
-    const result = spawn('npm', cmdargs, path.resolve(dir, subPackage), env);
-    if (result.status !== 0) process.exit(result.status);
+    console.log(`\x1b[96m${target}\x1b[0m ${bumpPkg.json.version} -> ${version}`);
+    bumpPkg.json.version = version;
+    fs.writeFileSync(
+      path.join(root.path, bumpPkg.path, 'package.json'),
+      JSON.stringify(bumpPkg.json, null, 2) + '\n');
+
+    let nl = false;
+    for (const n in subPackages) {
+      const pkg = subPackages[n];
+      for (const dep of DEPENDENCIES) {
+        if (pkg.json[dep] && pkg.json[dep][name]) {
+          console.log(`${pkg.json.name} \x1b[90m${dep}\x1b[0m ${pkg.json[dep][name]} -> ^${version}`);
+          nl = true;
+          pkg.json[dep][name] = `^${version}`;
+          fs.writeFileSync(
+            path.join(root.path, pkg.path, 'package.json'),
+            JSON.stringify(pkg.json, null, 2) + '\n');
+        }
+      }
+    }
+    if (nl) console.log();
   }
+} else {
+  const cmd = args[+run];
+  const cmdargs = args.slice(0, 1 + run);
+  if (!run && root.json.scripts && root.json.scripts[cmd]) cmdargs.unshift('run');
+
+  const spawn = (cmd, args, cwd, env) =>  child_process.spawnSync(cmd, args, {stdio: 'inherit', cwd, env});
+  const error = (msg) => { console.error(msg); process.exit(1); };
+
+  if (targets.length === 1) {
+    const target = targets[0];
+    if (!root.json.subPackages.includes(target)) error(`Unknown subPackage '${target}'`);
+    const json = require(path.resolve(root.path, target, 'package.json'));
+    if (run && !(json.scripts && json.scripts[cmd])) error(`'${json.name}' does not have script '${cmd}'`);
+
+    console.log('Running\x1b[36m npm', cmdargs.join(' '), '\x1b[0mfor package \x1b[34m' + json.name + '\x1b[0m...');
+    const result = spawn('npm', cmdargs, path.resolve(root.path, target), env);
+    process.exit(result.status);
+  } else {
+    console.log('Running\x1b[36m npm', cmdargs.join(' '), '\x1b[0mfor', targets.length, 'packages...');
+    for (const target of targets) {
+      if (!root.json.subPackages.includes(target)) error(`Unknown subPackage '${target}'`);
+      const json = require(path.resolve(root.path, target, 'package.json'));
+
+      if (run && !(json.scripts && json.scripts[cmd])) {
+        console.log('\x1b[90mSkipping package' + json.name + '...\x1b[0m');
+        continue;
+      }
+
+      console.log('Package \x1b[34m' + json.name + '\x1b[0m...');
+      const result = spawn('npm', cmdargs, path.resolve(root.path, target), env);
+      if (result.status !== 0) process.exit(result.status);
+    }
+  }
+}
+
+function find(dir) {
+  try {
+    const pkg = path.join(dir, 'package.json');
+    if (!fs.existsSync(pkg)) return find(path.dirname(dir), path.join(path.basename(dir)));
+    const json = require(pkg);
+    if (!json.subPackages) return find(path.dirname(dir), path.join(path.basename(dir)));
+    return {path: dir, json};
+  } catch (err) {
+    if (err.code !== 'MODULE_NOT_FOUND') throw err;
+    if (dir === '/') throw new Error(`No 'subPackages' entry found in any package.json`);
+    return find(path.dirname(dir), path.join(path.basename(dir)));
+  }
+}
+
+function fill(root) {
+  const subPackages = {};
+  const lookup = {};
+  for (const pkg of root.json.subPackages) {
+    const json = require(path.join(root.path, pkg, 'package.json'));
+    subPackages[json.name] = {path: pkg, json};
+    lookup[pkg] = json.name;
+  }
+  return {subPackages, lookup};
 }

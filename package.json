@@ -1,6 +1,6 @@
 {
   "name": "subpkg",
-  "version": "3.0.3",
+  "version": "4.0.0",
   "description": "Minimal utility for managing projects with sub-packages",
   "author": "Kirk Scheibelhut",
   "license": "MIT",
