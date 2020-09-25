@@ -37,9 +37,16 @@ if (args[0] === 'link') {
             console.log(`\x1b[90m${name}\x1b[0m ${path.relative(process.cwd(), from)} -> ${path.relative(process.cwd(), to)}`);
 
             try {
-              fs.unlinkSync(from);
+              if (fs.lstatSync(from).isDirectory()) {
+                fs.rmdirSync(from, {recursive: true});
+              } else {
+                fs.unlinkSync(from);
+              }
             } catch (err) {
               if (err.code !== 'ENOENT') throw err;
+            }
+            if (!fs.existsSync(path.dirname(from))) {
+              fs.mkdirSync(path.dirname(from), {mode: 0o755, recursive: true});
             }
             fs.symlinkSync(to, from);
           }
