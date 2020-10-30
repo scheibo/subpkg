@@ -97,7 +97,7 @@ if (args[0] === 'link') {
   const cmdargs = args.slice(0, 1 + run);
   if (!run && root.json.scripts && root.json.scripts[cmd]) cmdargs.unshift('run');
 
-  const spawn = (cmd, args, cwd, env) =>  child_process.spawnSync(cmd, args, {stdio: 'inherit', cwd, env});
+  const spawn = (cmd, args, cwd, env) =>  child_process.spawnSync(cmd, args, {stdio: 'inherit', shell: true, cwd, env});
   const error = (msg) => { console.error(msg); process.exit(1); };
 
   if (targets.length === 1) {
