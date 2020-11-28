@@ -14,7 +14,7 @@ const root = find(process.cwd());
 
 const run = args[0] === 'run';
 let targets = args.slice(1 + run);
-if (!targets.length) targets = root.json.subPackages;
+if (!targets.length) targets = list(root);
 
 const bin = `${root.path}/node_modules/.bin`;
 const env = {...process.env, PATH: process.env.PATH ? `${process.env.PATH}:${bin}` : bin};
@@ -150,4 +150,19 @@ function fill(root) {
     lookup[pkg] = json.name;
   }
   return {subPackages, lookup};
+}
+
+function list(root)
+{
+  if (typeof root.json.subPackages == "string") {
+    const subPackages = [];
+    const modules = require(path.join(root.path, root.json.subPackages));
+    console.log('Loading module list \x1b[34m' + root.json.subPackages + '\x1b[0m...');
+    for (const module in modules) {
+      console.log('Module \x1b[34m' + module + '\x1b[0m is \x1b[33m' + (modules[module] ? 'active' : 'inactive') + '\x1b[0m...');
+        if (modules[module]) subPackages.push('modules/' + module);
+    }
+    root.json.subPackages = subPackages;
+  }
+  return root.json.subPackages;
 }
