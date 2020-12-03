@@ -152,16 +152,16 @@ function fill(root) {
   return {subPackages, lookup};
 }
 
-function list(root)
-{
+function list(root) {
   if (root.json.subPackages instanceof Object && !Array.isArray(root.json.subPackages)) {
     const subPackages = []
-    for (const subFolder in root.json.subPackages) {
-      console.log('Loading module list \x1b[34m' + root.json.subPackages[subFolder] + '\x1b[0m for folder \x1b[33m' + subFolder + '\x1b[0m...');
-      const modules = require(path.join(root.path, root.json.subPackages[subFolder]));
-      for (const module in modules) {
-        console.log('Module \x1b[34m' + module + '\x1b[0m is \x1b[33m' + (modules[module] ? 'active' : 'inactive') + '\x1b[0m...');
-        if (modules[module]) subPackages.push(root.path + '/' + subFolder + '/' + module);
+    for (const dir in root.json.subPackages) {
+      console.log(
+        `Loading package list \x1b[34m${root.json.subPackages[dir]}\x1b[0m for directory \x1b[33m${dir}\x1b[0m...`);
+      const pkgs = require(path.join(root.path, root.json.subPackages[dir]));
+      for (const pkg in pkgs) {
+        console.log(`Package \x1b[34m${pkg}\x1b[0m is \x1b[33m${pkgs[pkg] ? 'active' : 'inactive'}\x1b[0m...`);
+        if (pkgs[pkg]) subPackages.push(root.path + '/' + dir + '/' + pkg);
       }
     }
     root.json.subPackages = subPackages;

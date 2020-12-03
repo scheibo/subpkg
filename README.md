@@ -19,7 +19,6 @@ $ npm install --save-dev subpkg
 {
     "name": "my-awesome-project",
     "version": "2.5.1",
-
     "subPackages": [
         "packages/sub-package-1",
         "packages/sub-package-2"
@@ -37,10 +36,9 @@ $ npm install --save-dev subpkg
 {
     "name": "my-awesome-project",
     "version": "2.5.1",
-
     "subPackages": {
-        "folderA" : "statusesA.json",
-        "folderB" : "statusesB.json"
+        "dirA" : "packagesA.json",
+        "dirB" : "packagesB.json"
     },
     "scripts": {
       "postinstall": "subpkg install && ...",
@@ -49,7 +47,8 @@ $ npm install --save-dev subpkg
 }
 ```
 
-With `statusesX.json` relative to root directory and specifying active/inactive modules in `folderX` sub-folder relative to root directory:
+Where `packagesA.json` is a JSON file specifying active/inactive packages in the directory `dirA`
+and both `dirA` and `packagesA.json` are paths relative to root directory:
 
 ```json
 {
@@ -63,13 +62,13 @@ Modules set to `false` will not be taken into account.
 
 #### Laravel Modules
 
-This feature allows seamless integration with [nWidart/laravel-modules](https://github.com/nWidart/laravel-modules) project:
+This feature allows for seamless integration with the
+[nWidart/laravel-modules](https://github.com/nWidart/laravel-modules) project:
 
 ```json
 {
     "name": "my-awesome-project",
     "version": "2.5.1",
-
     "subPackages": {
         "modules" : "modules_statuses.json"
     }
