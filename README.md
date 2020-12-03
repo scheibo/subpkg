@@ -31,6 +31,51 @@ $ npm install --save-dev subpkg
 }
 ```
 
+### Dynamic modules
+
+```json
+{
+    "name": "my-awesome-project",
+    "version": "2.5.1",
+
+    "subPackages": {
+        "folderA" : "statusesA.json",
+        "folderB" : "statusesB.json"
+    },
+    "scripts": {
+      "postinstall": "subpkg install && ...",
+      "build": "subpkg run build && ..."
+    }
+}
+```
+
+With `statusesX.json` relative to root directory and specifying active/inactive modules in `folderX` sub-folder relative to root directory:
+
+```json
+{
+    "sub-package-1": true,
+    "sub-package-2": true,
+    "sub-package-3": false,
+}
+```
+
+Modules set to `false` will not be taken into account.
+
+#### Laravel Modules
+
+This feature allows seamless integration with [nWidart/laravel-modules](https://github.com/nWidart/laravel-modules) project:
+
+```json
+{
+    "name": "my-awesome-project",
+    "version": "2.5.1",
+
+    "subPackages": {
+        "modules" : "modules_statuses.json"
+    }
+}
+```
+
 ## License
 
 `subpkg` is distributed under the terms of the [MIT License](LICENSE).
