@@ -156,12 +156,11 @@ function list(root) {
   if (root.json.subPackages instanceof Object && !Array.isArray(root.json.subPackages)) {
     const subPackages = []
     for (const dir in root.json.subPackages) {
-      console.log(
-        `Loading package list \x1b[34m${root.json.subPackages[dir]}\x1b[0m for directory \x1b[33m${dir}\x1b[0m...`);
+      console.log(`Loading package list \x1b[34m${root.json.subPackages[dir]}\x1b[0m for directory \x1b[33m${dir}\x1b[0m...`);
       const pkgs = require(path.join(root.path, root.json.subPackages[dir]));
       for (const pkg in pkgs) {
         console.log(`Package \x1b[34m${pkg}\x1b[0m is \x1b[33m${pkgs[pkg] ? 'active' : 'inactive'}\x1b[0m...`);
-        if (pkgs[pkg]) subPackages.push(root.path + '/' + dir + '/' + pkg);
+        if (pkgs[pkg]) subPackages.push(`${root.path}/${dir}/${pkg}`);
       }
     }
     root.json.subPackages = subPackages;
