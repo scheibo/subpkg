@@ -38,7 +38,10 @@ $ npm install --save-dev subpkg
     "name": "my-awesome-project",
     "version": "2.5.1",
 
-    "subPackages": "XXX_statuses.json",
+    "subPackages": {
+        "folderA" : "statusesA.json",
+        "folderB" : "statusesB.json"
+    },
     "scripts": {
       "postinstall": "subpkg install && ...",
       "build": "subpkg run build && ..."
@@ -46,7 +49,7 @@ $ npm install --save-dev subpkg
 }
 ```
 
-With `XXX_statuses.json` specifying active/inactive modules in XXX sub-folder:
+With `statusesX.json` relative to root directory and specifying active/inactive modules in `folderX` sub-folder relative to root directory:
 
 ```json
 {
@@ -58,7 +61,20 @@ With `XXX_statuses.json` specifying active/inactive modules in XXX sub-folder:
 
 Modules set to `false` will not be taken into account.
 
-This feature allows seamless integration with [nWidart/laravel-modules](https://github.com/nWidart/laravel-modules) project.
+#### Laravel Modules
+
+This feature allows seamless integration with [nWidart/laravel-modules](https://github.com/nWidart/laravel-modules) project:
+
+```json
+{
+    "name": "my-awesome-project",
+    "version": "2.5.1",
+
+    "subPackages": {
+        "modules" : "modules_statuses.json"
+    }
+}
+```
 
 ## License
 
