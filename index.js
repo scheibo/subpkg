@@ -161,7 +161,7 @@ function list(root)
       const modules = require(path.join(root.path, root.json.subPackages[subFolder]));
       for (const module in modules) {
         console.log('Module \x1b[34m' + module + '\x1b[0m is \x1b[33m' + (modules[module] ? 'active' : 'inactive') + '\x1b[0m...');
-        if (modules[module]) subPackages.push('./' + subFolder + '/' + module);
+        if (modules[module]) subPackages.push(root.path + '/' + subFolder + '/' + module);
       }
     }
     root.json.subPackages = subPackages;
