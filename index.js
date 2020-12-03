@@ -154,14 +154,15 @@ function fill(root) {
 
 function list(root)
 {
-  if (typeof root.json.subPackages == "string") {
-    const subPackages = [];
-    const subFolder =  root.json.subPackages.substring(0,  root.json.subPackages.indexOf('_'));
-    const modules = require(path.join(root.path, root.json.subPackages));
-    console.log('Loading module list \x1b[34m' + root.json.subPackages + '\x1b[0m for folder \x1b[33m'+subFolder+ '\x1b[0m...');
-    for (const module in modules) {
-      console.log('Module \x1b[34m' + module + '\x1b[0m is \x1b[33m' + (modules[module] ? 'active' : 'inactive') + '\x1b[0m...');
-      if (modules[module]) subPackages.push('./'+subFolder+ '/' + module);
+  if (root.json.subPackages instanceof Object && !Array.isArray(root.json.subPackages)) {
+    const subPackages = []
+    for (const subFolder in root.json.subPackages) {
+      console.log('Loading module list \x1b[34m' + root.json.subPackages[subFolder] + '\x1b[0m for folder \x1b[33m' + subFolder + '\x1b[0m...');
+      const modules = require(path.join(root.path, root.json.subPackages[subFolder]));
+      for (const module in modules) {
+        console.log('Module \x1b[34m' + module + '\x1b[0m is \x1b[33m' + (modules[module] ? 'active' : 'inactive') + '\x1b[0m...');
+        if (modules[module]) subPackages.push('./' + subFolder + '/' + module);
+      }
     }
     root.json.subPackages = subPackages;
   }
